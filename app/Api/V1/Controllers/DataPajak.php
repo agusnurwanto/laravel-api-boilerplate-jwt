@@ -10,6 +10,7 @@ use App\ModelPajakHotel;
 use App\ModelPajakPat;
 use App\ModelPajakReklame;
 use App\ModelPajakRestoran;
+use App\ModelPajakParkir;
 use App\ModelPajakSSPD;
 use Illuminate\Http\Request;
 use Illuminate\Mail\Message;
@@ -46,6 +47,8 @@ class DataPajak extends Controller
             $pajak = new ModelPajakRestoran;
         }else if($req['table']=='hiburan'){
             $pajak = new ModelPajakHiburan;
+        }else if($req['table']=='parkir'){
+            $pajak = new ModelPajakParkir;
         }else if($req['table']=='sspd' || $req['table']=='sspd_group'){
             $pajak = new ModelPajakSSPD;
         }

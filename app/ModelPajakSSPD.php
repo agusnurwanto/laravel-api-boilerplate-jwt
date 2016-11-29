@@ -22,15 +22,18 @@ class ModelPajakSSPD extends Model
 			$query = $query->select(DB::raw('*'));
 		}
 
-	    $tgl_bayar = $this->timeDB($req['tgl_bayar']);
-	    $query = $query->where('tgl_bayar', 'like', $tgl_bayar.'%');
+	    $time_start = $this->timeDB($req['time_start']);
+	    $time_stop = $this->timeDB($req['time_stop']);
+	    $query = $query->whereBetween('tgl_bayar', array($time_start, $time_stop));
 
 	    if($req['table'] == 'sspd'){
 		    $pk = $req['columns'][0]['search']['value'];
 		    $no_skp = $req['columns'][1]['search']['value'];
 		    $jenis_pajak = $req['columns'][2]['search']['value'];
-		    $nama = $req['columns'][3]['search']['value'];
-		    $jumlah = $req['columns'][4]['search']['value'];
+		    $npwpd = $req['columns'][3]['search']['value'];
+		    $nama = $req['columns'][4]['search']['value'];
+		    $tgl_bayar = $req['columns'][5]['search']['value'];
+		    $jumlah = $req['columns'][6]['search']['value'];
 		    if(!empty($pk)){
 		    	$query = $query->where('pk', 'like', '%'.$pk.'%');
 		    }
@@ -40,8 +43,14 @@ class ModelPajakSSPD extends Model
 		    if(!empty($jenis_pajak)){
 		    	$query = $query->where('jenis_pajak', 'like', '%'.$jenis_pajak.'%');
 		    }
+		    if(!empty($npwpd)){
+		    	$query = $query->where('npwpd', 'like', '%'.$npwpd.'%');
+		    }
 		    if(!empty($nama)){
 		    	$query = $query->where('nama', 'like', '%'.$nama.'%');
+		    }
+		    if(!empty($tgl_bayar)){
+		    	$query = $query->where('tgl_bayar', 'like', $this->timeDB($tgl_bayar).'%');
 		    }
 		    if(!empty($jumlah)){
 		    	$query = $query->where('jumlah', 'like', '%'.$jumlah.'%');
@@ -57,8 +66,12 @@ class ModelPajakSSPD extends Model
 		    	}else if($c_order==2){
 		    		$_c_order = 'jenis_pajak';
 		    	}else if($c_order==3){
-		    		$_c_order = 'nama';
+		    		$_c_order = 'npwpd';
 		    	}else if($c_order==4){
+		    		$_c_order = 'nama';
+		    	}else if($c_order==5){
+		    		$_c_order = 'tgl_bayar';
+		    	}else if($c_order==6){
 		    		$_c_order = 'jumlah';
 		    	}
 		    	if(!empty($_c_order)){
@@ -78,6 +91,10 @@ class ModelPajakSSPD extends Model
 		    	$query = $query->offset($req['start']);
 		    }
 		}else{
+			$search = $req['search']['value'];
+			if(!empty($search)){
+				$query = $query->where('tgl_bayar', 'like', $this->timeDB($search).'%');
+			}
 			if(empty($options['total'])){
 				$query = $query->groupBy('jenis_pajak');
 			}

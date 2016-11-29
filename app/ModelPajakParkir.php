@@ -5,10 +5,9 @@ namespace App;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Model;
 
-class ModelPajakReklame extends Model
+class ModelPajakParkir extends Model
 {
-	public $table = 'pendataan_pajak_reklame';
-	public $dt = 'reklame_dtl';
+	public $table = 'pendataan_parkir';
 	public $pr = 'm_prop';
 	public $kb = 'm_kab';
 	public $kc = 'm_kec';
@@ -20,42 +19,36 @@ class ModelPajakReklame extends Model
 	    if(!empty($count)){
 			$query = $query->select(DB::raw('count(*) as total'));
 		}else if(!empty($options['total'])){
-			$query = $query->select(DB::raw('SUM(dt.pajak_terhutang) as total'));
+			$query = $query->select(DB::raw('SUM(p.pajak_terhutang) as total'));
 		}else{
-			$query = $query->select(DB::raw('p.*, pr.nama as prop, kb.nama as kab, kc.nama as kec, kl.nama as kel, dt.lokasi as alamat_usaha, dt.judul_reklame as nama_usaha, dt.pajak_terhutang'));
+			$query = $query->select(DB::raw('p.*, pr.nama as prop, kb.nama as kab, kc.nama as kec, kl.nama as kel'));
 		}
 		$query = $query
 	    	->leftjoin(
-	    		$this->dt.' as dt', 
-	    		function($q){
-	    			$q->on('p.no_reg', '=', 'dt.no_reg')
-	    				->on('p.tahun', '=', 'dt.tahun');
-	    	})
-	    	->leftjoin(
 	    		$this->pr.' as pr', 
 	    		function($q){
-	    			$q->on('dt.kd_prop', '=', 'pr.kd_prop');
+	    			$q->on('p.kd_prop', '=', 'pr.kd_prop');
 	    	})
 	    	->leftjoin(
 	    		$this->kb.' as kb', 
 	    		function($q){
-	    			$q->on('dt.kd_kab', '=', 'kb.kd_kab')
-	    				->on('dt.kd_prop', '=', 'kb.kd_prop');
+	    			$q->on('p.kd_kab', '=', 'kb.kd_kab')
+	    				->on('p.kd_prop', '=', 'kb.kd_prop');
 	    	})
 	    	->leftjoin(
 	    		$this->kc.' as kc', 
 	    		function($q){
-	    			$q->on('dt.kd_kec', '=', 'kc.kd_kec')
-	    				->on('dt.kd_kab', '=', 'kc.kd_kab')
-	    				->on('dt.kd_prop', '=', 'kc.kd_prop');
+	    			$q->on('p.kd_kec', '=', 'kc.kd_kec')
+	    				->on('p.kd_kab', '=', 'kc.kd_kab')
+	    				->on('p.kd_prop', '=', 'kc.kd_prop');
 	    	})
 	    	->leftjoin(
 	    		$this->kl.' as kl', 
 	    		function($q){
-	    			$q->on('dt.kd_kelas_kawasan', '=', 'kl.kd_kel')
-	    				->on('dt.kd_kec', '=', 'kl.kd_kec')
-	    				->on('dt.kd_kab', '=', 'kl.kd_kab')
-	    				->on('dt.kd_prop', '=', 'kl.kd_prop');
+	    			$q->on('p.kd_kel', '=', 'kl.kd_kel')
+	    				->on('p.kd_kec', '=', 'kl.kd_kec')
+	    				->on('p.kd_kab', '=', 'kl.kd_kab')
+	    				->on('p.kd_prop', '=', 'kl.kd_prop');
 	    	});
 	    $s_pat = $req['columns'][1]['search']['value'];
 	    $s_nama_usaha = $req['columns'][2]['search']['value'];
@@ -70,13 +63,13 @@ class ModelPajakReklame extends Model
 	    $s_hutang = $req['columns'][11]['search']['value'];
 	    // $search = $req['search']['value'];
 	    if(!empty($s_nama_usaha)){
-	    	$query = $query->where('dt.judul_reklame', 'like', '%'.$s_nama_usaha.'%');
+	    	$query = $query->where('nama_usaha', 'like', '%'.$s_nama_usaha.'%');
 	    }
 	    if(!empty($s_npwp)){
-	    	$query = $query->where('dt.npwpd', 'like', '%'.$s_npwp.'%');
+	    	$query = $query->where('npwpd', 'like', '%'.$s_npwp.'%');
 	    }
 	    if(!empty($s_alamat)){
-	    	$query = $query->where('dt.lokasi', 'like', '%'.$s_alamat.'%');
+	    	$query = $query->where('alamat_usaha', 'like', '%'.$s_alamat.'%');
 	    }
 	    if(!empty($s_kel)){
 	    	$query = $query->where('kl.nama', 'like', '%'.$s_kel.'%');
@@ -90,7 +83,7 @@ class ModelPajakReklame extends Model
 	    if(!empty($s_prop)){
 	    	$query = $query->where('pr.nama', 'like', '%'.$s_prop.'%');
 	    }
-	    if($req['type_action'] == 'penetapan'){
+	    if($req['type_action'] == 'penetapan' || $req['type_action'] == 'piutang'){
 		    if(!empty($s_pat)){
 		    	$query = $query->where('no_penetapan', 'like', '%'.$s_pat.'%');
 		    }
@@ -98,7 +91,7 @@ class ModelPajakReklame extends Model
 		    	$s_tgl_pendataan = $this->timeDB($s_tgl_pendataan);
 		    	$query = $query->where('tgl_penetapan', 'like', '%'.str_replace(' 00:00:00', '', $s_tgl_pendataan).'%');
 		    }
-		}else if($req['type_action'] == 'pendataan' || $req['type_action'] == 'piutang'){
+		}else if($req['type_action'] == 'pendataan'){
 		    if(!empty($s_pat)){
 		    	$query = $query->where('no_reg', 'like', '%'.$s_pat.'%');
 		    }
@@ -108,7 +101,7 @@ class ModelPajakReklame extends Model
 		    }
 		}
 	    if(!empty($s_hutang)){
-	    	$query = $query->where('dt.pajak_terhutang', 'like', '%'.$s_hutang.'%');
+	    	$query = $query->where('pajak_terhutang', 'like', '%'.$s_hutang.'%');
 	    }
 
 		if($req['type_action'] == 'piutang'){
@@ -119,17 +112,17 @@ class ModelPajakReklame extends Model
 	    $order = $req['order'][0]['dir'];
 	    if($req['draw']!=1 && $c_order != 0){
 	    	if($c_order==1){
-		    	if($req['type_action'] == 'penetapan'){
+		    	if($req['type_action'] == 'penetapan' || $req['type_action'] == 'piutang'){
 		    		$_c_order = 'no_penetapan';
-				}else if($req['type_action'] == 'pendataan' || $req['type_action'] == 'piutang'){
+				}else if($req['type_action'] == 'pendataan'){
 		    		$_c_order = 'no_reg';
 				}
 	    	}else if($c_order==2){
-	    		$_c_order = 'dt.judul_reklame';
+	    		$_c_order = 'nama_usaha';
 	    	}else if($c_order==3){
-	    		$_c_order = 'dt.npwpd';
+	    		$_c_order = 'npwpd';
 	    	}else if($c_order==4){
-	    		$_c_order = 'dt.lokasi';
+	    		$_c_order = 'alamat_usaha';
 	    	}else if($c_order==5){
 	    		$_c_order = 'kl.nama';
 	    	}else if($c_order==6){
@@ -139,9 +132,9 @@ class ModelPajakReklame extends Model
 	    	}else if($c_order==8){
 	    		$_c_order = 'pr.nama';
 	    	}else if($c_order==9){
-		    	if($req['type_action'] == 'penetapan'){
+		    	if($req['type_action'] == 'penetapan' || $req['type_action'] == 'piutang'){
 	    			$_c_order = 'tgl_penetapan';
-				}else if($req['type_action'] == 'pendataan' || $req['type_action'] == 'piutang'){
+				}else if($req['type_action'] == 'pendataan'){
 	    			$_c_order = 'tgl_pendataan';
 				}
 	    	}else if($c_order==11){

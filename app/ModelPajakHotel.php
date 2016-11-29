@@ -83,19 +83,21 @@ class ModelPajakHotel extends Model
 	    if(!empty($s_prop)){
 	    	$query = $query->where('pr.nama', 'like', '%'.$s_prop.'%');
 	    }
-	    if($req['type_action'] == 'penetapan'){
+	    if($req['type_action'] == 'penetapan' || $req['type_action'] == 'piutang'){
 		    if(!empty($s_pat)){
 		    	$query = $query->where('no_penetapan', 'like', '%'.$s_pat.'%');
 		    }
 		    if(!empty($s_tgl_pendataan)){
-		    	$query = $query->where('tgl_penetapan', 'like', '%'.$s_tgl_pendataan.'%');
+		    	$s_tgl_pendataan = $this->timeDB($s_tgl_pendataan);
+		    	$query = $query->where('tgl_penetapan', 'like', '%'.str_replace(' 00:00:00', '', $s_tgl_pendataan).'%');
 		    }
-		}else if($req['type_action'] == 'pendataan' || $req['type_action'] == 'piutang'){
+		}else if($req['type_action'] == 'pendataan'){
 		    if(!empty($s_pat)){
 		    	$query = $query->where('no_reg', 'like', '%'.$s_pat.'%');
 		    }
 		    if(!empty($s_tgl_pendataan)){
-		    	$query = $query->where('tgl_pendataan', 'like', '%'.$s_tgl_pendataan.'%');
+		    	$s_tgl_pendataan = $this->timeDB($s_tgl_pendataan);
+		    	$query = $query->where('tgl_pendataan', 'like', '%'.str_replace(' 00:00:00', '', $s_tgl_pendataan).'%');
 		    }
 		}
 	    if(!empty($s_hutang)){
@@ -110,9 +112,9 @@ class ModelPajakHotel extends Model
 	    $order = $req['order'][0]['dir'];
 	    if($req['draw']!=1 && $c_order != 0){
 	    	if($c_order==1){
-		    	if($req['type_action'] == 'penetapan'){
+		    	if($req['type_action'] == 'penetapan' || $req['type_action'] == 'piutang'){
 		    		$_c_order = 'no_penetapan';
-				}else if($req['type_action'] == 'pendataan' || $req['type_action'] == 'piutang'){
+				}else if($req['type_action'] == 'pendataan'){
 		    		$_c_order = 'no_reg';
 				}
 	    	}else if($c_order==2){
@@ -130,9 +132,9 @@ class ModelPajakHotel extends Model
 	    	}else if($c_order==8){
 	    		$_c_order = 'pr.nama';
 	    	}else if($c_order==9){
-		    	if($req['type_action'] == 'penetapan'){
+		    	if($req['type_action'] == 'penetapan' || $req['type_action'] == 'piutang'){
 	    			$_c_order = 'tgl_penetapan';
-				}else if($req['type_action'] == 'pendataan' || $req['type_action'] == 'piutang'){
+				}else if($req['type_action'] == 'pendataan'){
 	    			$_c_order = 'tgl_pendataan';
 				}
 	    	}else if($c_order==11){
@@ -144,8 +146,8 @@ class ModelPajakHotel extends Model
 	    }
 	    $time_start = $this->timeDB($req['time_start']);
 	    $time_stop = $this->timeDB($req['time_stop']);
-    	if($req['type_action'] == 'penetapan'){
-	    	$query = $query->whereBetween('tgl_pendataan', array($time_start, $time_stop));
+    	if($req['type_action'] == 'penetapan' || $req['type_action'] == 'piutang'){
+	    	$query = $query->whereBetween('tgl_penetapan', array($time_start, $time_stop));
 		}else if($req['type_action'] == 'pendataan'){
 	    	$query = $query->whereBetween('tgl_pendataan', array($time_start, $time_stop));
 		}
