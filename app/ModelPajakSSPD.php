@@ -17,14 +17,18 @@ class ModelPajakSSPD extends Model
 		}else if(!empty($options['total'])){
 			$query = $query->select(DB::raw('SUM(jumlah) as total'));
 	    }else if($req['table'] == 'sspd_group'){
-			$query = $query->select(DB::raw('jenis_pajak, SUM(jumlah) as jumlah'));
+			$query = $query->select(DB::raw('jenis_pajak, SUM(jumlah) as jumlah, SUM(jumlah) as jumlah_real, pajak'));
 		}else{
 			$query = $query->select(DB::raw('*'));
 		}
 
 	    $time_start = $this->timeDB($req['time_start']);
 	    $time_stop = $this->timeDB($req['time_stop']);
-	    $query = $query->whereBetween('tgl_bayar', array($time_start, $time_stop));
+	    if(str_replace('-', '', $time_start) >= str_replace('-', '', $time_stop)){
+	    	$query = $query->where('tgl_bayar', 'like', $time_start.'%');
+	    }else{
+	    	$query = $query->whereBetween('tgl_bayar', array($time_start, $time_stop));
+	    }
 
 	    if($req['table'] == 'sspd'){
 		    $pk = $req['columns'][0]['search']['value'];
@@ -98,6 +102,9 @@ class ModelPajakSSPD extends Model
 			if(empty($options['total'])){
 				$query = $query->groupBy('jenis_pajak');
 			}
+			$query = $query
+				->orderBy('pajak', 'ASC')
+				->orderBy('jenis_pajak', 'ASC');
 		}
 
 	    if(false){
